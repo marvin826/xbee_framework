@@ -1,6 +1,6 @@
 
 
-class XbeePacket:
+class XBeePacket:
 
     def __init__(self, escaped=False):
 
@@ -69,7 +69,7 @@ class XbeePacket:
         # packet already
         if(self.isWholePacket):
             raise Exception(
-                "XbeePacket: Error: pushing raw bytes to whole packet")
+                "XBeePacket: Error: pushing raw bytes to whole packet")
 
         if(len(self.rawBytes) == 0):
             # make sure the first byte is '\x7e'
@@ -149,7 +149,7 @@ class XbeePacket:
             # verify that this is not a corrupt packet
             if(self.calculatedChecksum != self.packetChecksum):
                 raise Exception(
-                    "XbeePacket : Error: Received packet is corrupted" +
+                    "XBeePacket : Error: Received packet is corrupted" +
                     str(self))
             else:
                 self.isErrorFreePacket = True
