@@ -1,3 +1,4 @@
+import time
 
 
 class XBeePacket:
@@ -13,6 +14,7 @@ class XBeePacket:
         self.isWholePacket = False
         self.isErrorFreePacket = True
         self.totalPacketLength = -1
+        self.timeStamp = 0.0
 
     def __str__(self):
         tempStr = "raw bytes length: " + str(len(self.rawBytes)) + \
@@ -23,7 +25,8 @@ class XBeePacket:
                   str(hex(self.calculatedChecksum)) + \
                   "\nisWholePacket: " + str(self.isWholePacket) + \
                   "\nisErrorFreePacket: " + str(self.isErrorFreePacket) + \
-                  "\ntotalPacketLength: " + str(self.totalPacketLength)
+                  "\ntotalPacketLength: " + str(self.totalPacketLength) + \
+                  "\ntime received: " + self.getTimeStampStr()
         tempStr += "\nRaw Bytes:\n"
         tempStr += self.bytesToStr(self.rawBytes)
         tempStr += "Processed Bytes:\n"
@@ -48,6 +51,19 @@ class XBeePacket:
 
     def getIsValidPacket(self):
         return self.isWholePacket and self.isErrorFreePacket
+
+    def getTimeStamp(self):
+        return self.timeStamp
+
+    def getTimeStampStr(self):
+        localTime = time.localtime(self.timeStamp)
+        return ("%4d-%2d-%2dT%2d:%2d:%2d%0+3d" % (localTime.tm_year,
+                                                  localTime.tm_mon,
+                                                  localTime.tm_mday,
+                                                  localTime.tm_hour,
+                                                  localTime.tm_min,
+                                                  localTime.tm_sec,
+                                                  (time.timezone / 3600.0)))
 
     def setDelimitMode(self, mode):
         self.delimitMode = mode
@@ -104,6 +120,9 @@ class XBeePacket:
         # then we have a complete packet
         if(self.totalPacketLength == len(self.rawBytes)):
             self.isWholePacket = True
+
+            # timestamp this packet
+            self.timeStamp = time.time()
 
             # deal with any escaped bytes
             self.processedBytes = self.processEscapedBytes(self.rawBytes)
