@@ -1,7 +1,7 @@
 import XBeeReader as xbr
 import XBeeConnection as xbc
 import XBeePacketHandler as xbph
-
+import traceback
 
 conn = xbc.XBeeConnection()
 
@@ -18,6 +18,7 @@ try:
 
 except Exception, e:
     print "ERROR: ", e
+    print traceback.print_exc()
 else:
     pass
 finally:

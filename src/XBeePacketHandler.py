@@ -7,4 +7,5 @@ class XBeePacketHandler():
         _mDatabase = None
 
     def handle(self, packet):
-        print "Received packet: ", str(packet)
+        tempStr = "{0:16}:\n{1:-<17}\n".format("Received packet", "")
+        print tempStr, str(packet)

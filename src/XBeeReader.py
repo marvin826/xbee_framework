@@ -35,13 +35,13 @@ class XBeeReader():
         # create a new packet instance, and wait to read
         # bytes again
         while(True):
+
             raw_byte = self._mXBeeConnection.getNextByte()
             byte_buffer.append(raw_byte)
             if(self._mXBeeConnection.moreBytesAvailable() is False):
 
                 extra_bytes = currentPacket.pushRawBytes(byte_buffer)
                 if(currentPacket.getIsValidPacket() is True):
-
                     if(self._mPacketHandler):
                         self._mPacketHandler.handle(currentPacket)
 

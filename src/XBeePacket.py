@@ -1,4 +1,5 @@
 import time
+import xbee_constants as xbc
 
 
 class XBeePacket:
@@ -9,25 +10,39 @@ class XBeePacket:
         self.processedBytes = []
         self.withEscapeChars = escaped
         self.frameDataLength = -1
-        self.packetChecksum = None
-        self.calculatedChecksum = None
+        self.packetChecksum = -1
+        self.calculatedChecksum = -1
         self.isWholePacket = False
         self.isErrorFreePacket = True
         self.totalPacketLength = -1
+        self.apiFrameType = 0x0
         self.timeStamp = 0.0
 
     def __str__(self):
-        tempStr = "raw bytes length: " + str(len(self.rawBytes)) + \
-                  "\nwithEscapeChars: " + str(self.withEscapeChars) + \
-                  "\nframe data lenth: " + str(self.frameDataLength) + \
-                  "\npacket checksum: " + str(hex(self.packetChecksum)) + \
-                  "\ncalculated checksum: " + \
-                  str(hex(self.calculatedChecksum)) + \
-                  "\nisWholePacket: " + str(self.isWholePacket) + \
-                  "\nisErrorFreePacket: " + str(self.isErrorFreePacket) + \
-                  "\ntotalPacketLength: " + str(self.totalPacketLength) + \
-                  "\ntime received: " + self.getTimeStampStr()
-        tempStr += "\nRaw Bytes:\n"
+        formatStr = "{0:20} : {1}\n" + \
+                    "{2:20} : {3}\n" + \
+                    "{4:20} : {5}\n" + \
+                    "{6:20} : {7}\n" + \
+                    "{8:20} : {9}\n" + \
+                    "{10:20} : {11}\n" + \
+                    "{12:20} : {13}\n" + \
+                    "{14:20} : {15}\n" + \
+                    "{16:20} : {17}\n" + \
+                    "{18:20} : {19}\n"
+        tempStr = \
+            formatStr.format("Raw bytes length", str(len(self.rawBytes)),
+                             "Frame data length", str(self.frameDataLength),
+                             "Total frame length", str(self.totalPacketLength),
+                             "Escaped?", str(self.withEscapeChars),
+                             "Frame checksum", str(hex(self.packetChecksum)),
+                             "Calculated checksum",
+                             str(hex(self.calculatedChecksum)),
+                             "Whole frame?", str(self.isWholePacket),
+                             "Error free frame?", str(self.isErrorFreePacket),
+                             "Frame type",
+                             self.getFrameType(self.apiFrameType),
+                             "Time received", self.getTimeStampStr())
+        tempStr += "Raw Bytes:\n"
         tempStr += self.bytesToStr(self.rawBytes)
         tempStr += "Processed Bytes:\n"
         tempStr += self.bytesToStr(self.processedBytes)
@@ -55,15 +70,24 @@ class XBeePacket:
     def getTimeStamp(self):
         return self.timeStamp
 
+    def getFrameType(self):
+        return self.apiFrameType
+
+    def getFrameType(self, apiFrameType):
+        typeStr = "\"" + xbc.apiFrameTypes[apiFrameType] + \
+                  "\" (" + str(hex(apiFrameType)) + ")"
+        return typeStr
+
     def getTimeStampStr(self):
         localTime = time.localtime(self.timeStamp)
-        return ("%4d-%2d-%2dT%2d:%2d:%2d%0+3d" % (localTime.tm_year,
-                                                  localTime.tm_mon,
-                                                  localTime.tm_mday,
-                                                  localTime.tm_hour,
-                                                  localTime.tm_min,
-                                                  localTime.tm_sec,
-                                                  (time.timezone / 3600.0)))
+        return ("%4d-%02d-%02dT%02d:%02d:%02d%0+3d" %
+                (localTime.tm_year,
+                 localTime.tm_mon,
+                 localTime.tm_mday,
+                 localTime.tm_hour,
+                 localTime.tm_min,
+                 localTime.tm_sec,
+               (time.timezone / 3600.0)))
 
     def setDelimitMode(self, mode):
         self.delimitMode = mode
@@ -88,8 +112,8 @@ class XBeePacket:
                 "XBeePacket: Error: pushing raw bytes to whole packet")
 
         if(len(self.rawBytes) == 0):
-            # make sure the first byte is '\x7e'
-            if(raw_bytes[0] != '\x7e'):
+            # make sure the first byte is the frame delimiter
+            if(raw_bytes[0] != xbc.apiFrameDelimiter):
                 raise Exception("Bad bytes received for new packet")
 
         # look to see if we have a partial -- meaning that
@@ -99,7 +123,7 @@ class XBeePacket:
         for i in range(len(raw_bytes)):
             rbyte = raw_bytes[i]
             delim_index = -1
-            if(rbyte == '\x7e' and i > 0):
+            if(rbyte == xbc.apiFrameDelimiter and i > 0):
                 delim_index = i
                 my_bytes = raw_bytes[:i]
                 extra_bytes = raw_bytes[i:]
@@ -111,8 +135,8 @@ class XBeePacket:
         # frame packet data length bytes so far
         if(len(self.rawBytes) >= 3):
             # get the length of the frame packet data
-            msb = self.rawBytes[1]
-            lsb = self.rawBytes[2]
+            msb = self.rawBytes[xbc.apiFrameLenPos[0]]
+            lsb = self.rawBytes[xbc.apiFrameLenPos[1]]
             self.setFrameDataLength((msb << 8) | lsb)
 
         # if the calculated packet length is
@@ -128,14 +152,19 @@ class XBeePacket:
             self.processedBytes = self.processEscapedBytes(self.rawBytes)
 
             # grab the checksum. make sure the checksum was not
-            # delimted
+            # delimited. note: checksum is always at the end of
+            # the frame
             checksum = self.rawBytes[-1:][0]
-            if(self.rawBytes[-2:-1][0] == 0x7d):
-                checksum = checksum ^ 0x20
+            if(self.rawBytes[-2:-1][0] == xbc.apiFrameEscapeIndicator):
+                checksum = checksum ^ xbc.apiFrameEscapeMask
             self.packetChecksum = checksum
 
             # calculate the checksum
             self.calculateChecksum()
+
+            # grab the frame type if we have a valid frame
+            if(self.getIsValidPacket()):
+                self.apiFrameType = self.rawBytes[xbc.apiFrameTypePos]
 
         return extra_bytes
 
@@ -150,9 +179,10 @@ class XBeePacket:
         self.totalPacketLength = self.frameDataLength + 4
         delimCount = 0
         for raw_byte in self.rawBytes:
-            if(raw_byte == 0x7d):
+            if(raw_byte == xbc.apiFrameEscapeIndicator):
                 delimCount += 1
         self.totalPacketLength += delimCount
+        return self.totalPacketLength
 
     def calculateChecksum(self):
         # we calculate the checksum by
@@ -168,7 +198,7 @@ class XBeePacket:
             # verify that this is not a corrupt packet
             if(self.calculatedChecksum != self.packetChecksum):
                 raise Exception(
-                    "XBeePacket : Error: Received packet is corrupted" +
+                    "XBeePacket : Error: Received packet is corrupted\n" +
                     str(self))
             else:
                 self.isErrorFreePacket = True
@@ -177,12 +207,12 @@ class XBeePacket:
         processed = []
         escaped = False
         for b in raw_bytes:
-            if(b == 0x7d and self.withEscapeChars):
+            if(b == xbc.apiFrameEscapeIndicator and self.withEscapeChars):
                 escaped = True
                 continue
             if(escaped):
                 escaped = False
-                b = b ^ 0x20
+                b = b ^ xbc.apiFrameEscapeMask
             processed.append(b)
         return processed
 
