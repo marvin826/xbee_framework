@@ -1,0 +1,79 @@
+[
+    {
+        "type" : 146,
+        "description" : "ZigBee IO Data Sample Rx Indicator",
+        "formats" :
+            [ 
+                {
+                    "type"   : "XBeeInt",
+                    "name"   : "Start Delimiter",
+                    "offset" : 0,
+                    "length" : 1
+                },
+                {
+                    "type"   : "XBeeInt",
+                    "name"   : "Frame Data Length",
+                    "offset" : 1,
+                    "length" : 2
+                },
+                {
+                    "type"   : "XBeeInt",
+                    "name"   : "Frame Type",
+                    "offset" : 3,
+                    "length" : 1
+                }, 
+                {
+                    "type"   : "XBeeAddress",
+                    "name"   : "64-bit Source Address",
+                    "offset" : 4,
+                    "length" : 8
+                },
+                {
+                    "type"   : "XBeeAddress",
+                    "name"   : "16-bit Source Network Address",
+                    "offset" : 12,
+                    "length" : 2
+                },
+                {
+                    "type"   : "XBeeInt",
+                    "name"   : "Receive Options",
+                    "offset" : 14,
+                    "length" : 1
+                },
+                {
+                    "type"   : "XBeeInt",
+                    "name"   : "Number of Samples",
+                    "offset" : 15,
+                    "length" : 1
+                },
+                {
+                    "type" : "XBeeBitField",
+                    "name" : "Digital Samples",
+                    "mask offset" : 16,
+                    "mask length" : 2,
+                    "field type" : "fixed",
+                    "field offset" : 19,
+                    "field length" : 2,
+                    "sample size" : 1,
+                    "sample names" : 
+                        [ "None", "None", "None", "CD/DIC 12",
+                          "PWM/DI O11", "RSSI/DI O10", "None", "None", 
+                          "CTS/DI O7", "RTS/DI O6", "ASSOC DIO5", "DIO4",
+                          "AD3/DI O3", "AD2/DI O2", "AD1/DI O1", "AD0/DI O0" ]
+                },
+                {
+                    "type" : "XBeeBitField",
+                    "name" : "Analog Samples",
+                    "mask offset" : 21,
+                    "mask length" : 1,
+                    "field type" : "variable",
+                    "field offset" : 22,
+                    "sample size" : 16,
+                    "sample order" : "reverse",
+                    "sample names" : 
+                        [ "Supply Voltage", "None", "None", "None",
+                          "AD3", "AD2", "AD1", "AD0" ]
+                }
+            ]
+    }
+]
