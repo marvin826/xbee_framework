@@ -13,7 +13,7 @@ class XBeeDataType(object):
 
     def read(self, objs):
         if "type" in objs:
-            self.mType = objs["type"]
+            self._mType = objs["type"]
         else:
             return False
 
@@ -25,4 +25,4 @@ class XBeeDataType(object):
         return True
 
     def decode(self, rBytes):
-        return {"name": self._mName}
+        return {"name": self._mName, "type": self._mType}

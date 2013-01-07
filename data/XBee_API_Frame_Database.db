@@ -56,23 +56,23 @@
                     "field length" : 2,
                     "sample size" : 1,
                     "sample names" : 
-                        [ "None", "None", "None", "CD/DIC 12",
-                          "PWM/DI O11", "RSSI/DI O10", "None", "None", 
-                          "CTS/DI O7", "RTS/DI O6", "ASSOC DIO5", "DIO4",
-                          "AD3/DI O3", "AD2/DI O2", "AD1/DI O1", "AD0/DI O0" ]
+                        [ "AD0/DI O0", "AD1/DI O1", "AD2/DI O2", "AD3/DI O3",
+                          "DIO4", "ASSOC/DIO5", "RTS/DI O6", "CTS/DI O7",
+                          "None", "None", "RSSI/DI O10", "PWM/DI O11",
+                          "CD/DIC 12", "None", "None", "None"]
                 },
                 {
                     "type" : "XBeeBitField",
                     "name" : "Analog Samples",
-                    "mask offset" : 21,
+                    "mask offset" : 18,
                     "mask length" : 1,
+                    "mask order" : "reverse",
                     "field type" : "variable",
-                    "field offset" : 22,
+                    "field offset" : 21,
                     "sample size" : 16,
-                    "sample order" : "reverse",
-                    "sample names" : 
-                        [ "Supply Voltage", "None", "None", "None",
-                          "AD3", "AD2", "AD1", "AD0" ]
+                    "sample names" :
+                        [ "AD0", "AD1", "AD2", "AD3",
+                          "None", "None", "None", "Supply Voltage" ] 
                 }
             ]
     }
