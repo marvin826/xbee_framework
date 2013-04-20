@@ -7,12 +7,20 @@ class XBeeReader():
     def __init__(self):
         self._mXBeeConnection = None
         self._mPacketHandler = None
+        self._mLogger = None
+        self._mPacketCallback = None
 
     def setHandler(self, handler):
         self._mPacketHandler = handler
 
     def setConnection(self, connection):
         self._mXBeeConnection = connection
+
+    def setPacketCallback(self, callback):
+        self._mPacketCallback = callback
+
+    def setLogger(self, logger):
+        self._mLogger = logger
 
     def read(self, escaped=False):
         # clean out the buffer so
@@ -43,7 +51,15 @@ class XBeeReader():
                 extra_bytes = currentPacket.pushRawBytes(byte_buffer)
                 if(currentPacket.getIsValidPacket() is True):
                     if(self._mPacketHandler):
-                        self._mPacketHandler.handle(currentPacket)
+                        try:
+                            jsonStr = \
+                                self._mPacketHandler.handle(currentPacket)
+                            if(self._mPacketCallback is not None):
+                                self._mPacketCallback(jsonStr)
+                        except Exception, e:
+                            logStr = "XBeeReader: ERROR: Error handling packet"
+                            self._mLogger.critical(logStr)
+                            raise Exception(logStr)
 
                     currentPacket = xbp.XBeePacket(escaped)
 

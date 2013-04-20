@@ -8,6 +8,7 @@ class XBeeFrameDescriptor(object):
         self._mFrameType = 0x0
         self._mDescription = "None"
         self._mXBeeDataTypes = []
+        self._mLogger = None
 
     def __str__(self):
         tempStr = "\tXBeeFrameDescriptor\n" + \
@@ -17,6 +18,9 @@ class XBeeFrameDescriptor(object):
         for dataType in self._mXBeeDataTypes:
             tempStr += str(dataType) + "\n"
         return tempStr
+
+    def setLogger(self, logger):
+        self._mLogger = logger
 
     def getFrameType(self):
         return self._mFrameType
@@ -36,10 +40,13 @@ class XBeeFrameDescriptor(object):
             if("type" in format):
                 typeStr = format["type"]
                 dataType = self.getDataTypeClass(typeStr)
+                dataType.setLogger(self._mLogger)
                 dataType.read(format)
                 self._mXBeeDataTypes.append(dataType)
             else:
-                print "ERROR: no \"type\" specified for format\n"
+                if(self._mLogger is not None):
+                    logMessage = "ERROR: no \"type\" specified for format\n"
+                    self._mLogger.critical(logMessage)
 
     def getDataTypeClass(self, classname):
         # NOTE: our convention is that the module name

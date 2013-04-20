@@ -1,25 +1,53 @@
 import XBeePacket as xbp
 import XBeeFrameDatabase as xbfdb
+import json
 
 
 class XBeePacketHandler():
     """Processes XBeePackets from an XBeeReader"""
     def __init__(self):
 
-        directory = "j:\\Users\\Todd\\Projects\\ZigBee\\XBee Framework\data\\"
-        fileName = "XBee_API_Frame_Database.db"
+        self._mFrameDB = False
+        self._mLogger = None
 
-        self._mFrameDB = xbfdb.XBeeFrameDatabase()
-        self._mFrameDB.read(directory + fileName)
+    def setDatabase(self, frameDatabase):
+        self._mFrameDB = frameDatabase
+        if(self._mLogger is not None):
+            self._mFrameDB.setLogger(self._mLogger)
+
+    def setLogger(self, logger):
+        self._mLogger = logger
 
     def handle(self, packet):
-        tempStr = "{0:16}:\n{1:-<17}\n".format("Received packet", "")
-        print tempStr, str(packet)
+        if(self._mFrameDB is True):
+            return
+
+        self.logMessage("Received packet", "debug")
+        self.logMessage(str(packet), "debug")
 
         descriptors = self._mFrameDB.getDescriptors()
         for desc in descriptors:
             if(desc.getFrameType() == packet.getFrameType()):
                 dataTypes = desc.getXBeeDataTypes()
+                decodedPacket = []
                 for dataType in dataTypes:
-                    decode = dataType.decode(packet.getProcessedBytes())
-                    print decode
+                    try:
+                        decode = dataType.decode(packet.getProcessedBytes())
+                        decodedPacket.append(decode)
+                    except Exception, e:
+                        logStr = "XBeePacketHandler: " \
+                            + "ERROR: Error decoding packet"
+                        self.logMessage(logStr, "critical")
+                        raise Exception(logStr)
+                jsonStr = json.dumps(decodedPacket)
+                self.logMessage(jsonStr, "debug")
+                return jsonStr
+
+    def logMessage(self, message, level="info"):
+        if(self._mLogger is not None):
+            if(level is "info"):
+                self._mLogger.info(message)
+            elif(level is "debug"):
+                self._mLogger.debug(message)
+            elif(level is "critical"):
+                self._mLogger.critical(message)

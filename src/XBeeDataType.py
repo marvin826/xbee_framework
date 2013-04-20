@@ -5,24 +5,28 @@ class XBeeDataType(object):
     def __init__(self):
         self._mName = "None"
         self._mType = "Unknown"
+        self._mLogger = None
 
     def __str__(self):
         tempStr = "\t\tname: " + self._mName + "\n" + \
                   "\t\ttype: " + self._mType + "\n"
         return tempStr
 
+    def setLogger(self, logger):
+        self._mLogger = logger
+
     def read(self, objs):
         if "type" in objs:
             self._mType = objs["type"]
         else:
-            return False
+            excStr = "XBeeDataType: ERROR: No 'type' field found during read()"
+            raise Exception(excStr)
 
         if "name" in objs:
             self._mName = objs["name"]
         else:
-            return False
-
-        return True
+            excStr = "XBeeDataType: ERROR: No 'name' field found during read()"
+            raise Exception(excStr)
 
     def decode(self, rBytes):
         return {"name": self._mName, "type": self._mType}

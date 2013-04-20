@@ -33,14 +33,17 @@ class XBeeInt(xbdt.XBeeDataType):
         if "offset" in objs:
             self._mOffset = objs["offset"]
         else:
-            print "ERROR: XBeeInt requires an \"offset\" field"
-            return False
+            logStr = "ERROR: XBeeInt requires an \"offset\" field"
+            self._mLogger.critical(logStr)
+            raise Exception(logStr)
 
         if "length" in objs:
             self._mLength = objs["length"]
         else:
-            print "ERROR: XBeeInt (" + name + ") requires an \"length\" field"
-            return False
+            logStr = "ERROR: XBeeInt (" + name \
+                + ") requires an \"length\" field"
+            self._mLogger.critical(logStr)
+            raise Exception(logStr)
 
         if "enumeration" in objs:
             self._mEnumeration = objs["enumeration"]
@@ -63,8 +66,10 @@ class XBeeInt(xbdt.XBeeDataType):
             if(value >= 0 and value < enumLength):
                 decodedValue["enumeration"] = self._mEnumeration[value]
             else:
-                print "ERROR: Decoded value (" + str(value) + \
-                      ") not in enumeration for " + \
-                      self._mName
+                logStr = "ERROR: Decoded value (" + str(value) + \
+                         ") not in enumeration for " + \
+                         self._mName
+                self._mLogger.critical(logStr)
+                raise Exception(logStr)
 
         return decodedValue

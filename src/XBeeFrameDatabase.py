@@ -7,12 +7,16 @@ class XBeeFrameDatabase(object):
     def __init__(self):
         super(XBeeFrameDatabase, self).__init__()
         self._mDescriptors = []
+        self._mLogger = None
 
     def __str__(self):
         tempStr = "XBeeFrameDatabase\n"
         for desc in self._mDescriptors:
             tempStr += str(desc)
         return tempStr
+
+    def setLogger(self, logger):
+        self._mLogger
 
     def getDescriptors(self):
         return self._mDescriptors
@@ -26,6 +30,7 @@ class XBeeFrameDatabase(object):
         # within a simple JSON array
         for frameDesc in objs:
             fDesc = xbfd.XBeeFrameDescriptor()
+            fDesc.setLogger(self._mLogger)
             fDesc.read(frameDesc)
             self._mDescriptors.append(fDesc)
 

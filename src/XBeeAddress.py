@@ -22,15 +22,17 @@ class XBeeAddress(xbdt.XBeeDataType):
         if "offset" in objs:
             self._mOffset = objs["offset"]
         else:
-            print "ERROR: XBeeAddress requires an \"offset\" field"
-            return False
+            logStr = "ERROR: XBeeAddress requires an \"offset\" field"
+            self._mLogger.critical(logStr)
+            raise Exception(logStr)
 
         if "length" in objs:
             self._mLength = objs["length"]
         else:
-            print "ERROR: XBeeAddress (" + name + \
-                  ") requires an \"length\" field"
-            return False
+            logStr = "ERROR: XBeeAddress (" + name + \
+                ") requires an \"length\" field"
+            self._mLogger.critical(logStr)
+            raise Exception(logStr)
 
     def decode(self, rBytes):
         decodedValue = super(XBeeAddress, self).decode(rBytes)
@@ -42,8 +44,10 @@ class XBeeAddress(xbdt.XBeeDataType):
         # addresses are in 2 byte octets, so the length
         # needs to be even
         if(self._mLength % 2 != 0):
-            print "ERROR: Length of address is not evey for " +\
+            logStr = "ERROR: Length of address is not even for " +\
                 self._mName
+            self._mLogger.critical(logStr)
+            raise Exception(logStr)
 
         for i in range(0, self._mLength):
             rByte = rBytes[self._mOffset + i]
