@@ -1,3 +1,4 @@
+import test_configuration
 import unittest as ut
 import XBeeInt as xbi
 

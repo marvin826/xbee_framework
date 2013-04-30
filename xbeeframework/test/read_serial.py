@@ -1,18 +1,10 @@
+import test_configuration as tc
 import XBeeReader as xbr
 import XBeeConnection as xbc
 import XBeePacketHandler as xbph
 import XBeeFrameDatabase as xbfdb
 import traceback
 import logging
-
-configuration = {
-    "dbFilename": "j:\\Users\\Todd\\Projects\\ZigBee\\XBee Framework"
-    + "\\data\\XBee_API_Frame_Database.db",
-    "commPort": "COM6",
-    "logFile": "j:\\Users\\Todd\\Projects\\ZigBee\\XBee Framework"
-    + "\\XBeeFramework.log"
-
-}
 
 
 def packetCallback(jsonStr):
@@ -24,7 +16,7 @@ conn = xbc.XBeeConnection()
 # create a logger object
 framework_log = logging.getLogger("messages")
 m_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-m_log_file = logging.FileHandler(configuration['logFile'])
+m_log_file = logging.FileHandler(tc.configuration['logFile'])
 m_log_file.setFormatter(m_formatter)
 m_streamHandler = logging.StreamHandler()
 framework_log.addHandler(m_log_file)
@@ -34,14 +26,14 @@ framework_log.setLevel(logging.INFO)
 framework_log.info("XBeeFramework Start")
 
 try:
-    conn.open(configuration["commPort"])
+    conn.open(tc.configuration["commPort"])
     logString = "Successfully opened COMM port : " \
-        + configuration["commPort"]
+        + tc.configuration["commPort"]
     framework_log.info(logString)
 
     # initialize the frame database
     frameDB = xbfdb.XBeeFrameDatabase()
-    frameDB.read(configuration["dbFilename"])
+    frameDB.read(tc.configuration["dbFilename"])
 
     # create our reader
     reader = xbr.XBeeReader()
@@ -49,11 +41,11 @@ try:
 
     # create our packet handler
     handler = xbph.XBeePacketHandler()
-    handler.setLogger(framework_logq)
+    handler.setLogger(framework_log)
     handler.setDatabase(frameDB)
 
     logString = "Successfully read database: " \
-        + configuration["dbFilename"]
+        + tc.configuration["dbFilename"]
     framework_log.info(logString)
 
     reader.setConnection(conn)
