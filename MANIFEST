@@ -17,5 +17,7 @@ xbeeframework\xbee_exceptions.py
 xbeeframework\test\XBeeIntTest.py
 xbeeframework\test\__init__.py
 xbeeframework\test\read_serial.py
+xbeeframework\test\readtemperatures_new.py
+xbeeframework\test\test_configuration.py
 xbeeframework\test\test_database.py
 xbeeframework\test\test_json.py

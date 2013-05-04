@@ -50,7 +50,7 @@
                     "mask length" : 1,
                     "mask order" : "reverse",
                     "field type" : "variable",
-                    "field offset" : 21,
+                    "field offset" : 19,
                     "sample size" : 16,
                     "sample names" :
                         [ "AD0", "AD1", "AD2", "AD3",
