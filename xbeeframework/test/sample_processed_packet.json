@@ -1,0 +1,40 @@
+{ 
+    "TimeStamp": "2013-05-04T11:08:07", 
+    "Components":   {
+        "64-bit Source Address": {
+                "raw": ["0x0", "0x13", "0xa2", "0x0", "0x40", "0x8b", "0x43", "0x7"], 
+                "type": "XBeeAddress", 
+                "address": "0013 a200 408b 4307"
+            }, 
+        "Digital Samples": {
+                "values": {"AD1/DI O1": 1}, 
+                "mask": 2, 
+                "raw samples": ["0x0", "0x2"], 
+                "type": "XBeeBitField", 
+                "raw mask": [0, 2]
+            }, 
+        "Analog Samples":   {
+                "values": {"AD2": 4, "Supply Voltage": 2628}, 
+                "mask": 132, 
+                "raw samples": ["0x0", "0x4", "0xa", "0x44"], 
+                "type": "XBeeBitField", 
+                "raw mask": [132]
+            }, 
+        "Number of Samples": {
+                "int": 1, 
+                "raw": ["0x1"], 
+                "type": "XBeeInt"
+            }, 
+        "16-bit Source Network Address": {
+                "raw": ["0x66", "0x1c"], 
+                "type": "XBeeAddress", 
+                "address": "661c"
+            }, 
+        "Receive Options": {
+                "int": 65, 
+                "raw": ["0x41"], 
+                "type": "XBeeInt"
+            }
+    },
+    "FrameType": "0x92"
+}
