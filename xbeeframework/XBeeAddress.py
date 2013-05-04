@@ -35,11 +35,13 @@ class XBeeAddress(xbdt.XBeeDataType):
             raise Exception(logStr)
 
     def decode(self, rBytes):
-        decodedValue = super(XBeeAddress, self).decode(rBytes)
+        parentDecode = super(XBeeAddress, self).decode(rBytes)
+        decodedValue = parentDecode[self._mName]
 
         value = 0
         rawBytes = []
         octets = []
+        outRawBytes = []
 
         # addresses are in 2 byte octets, so the length
         # needs to be even
@@ -52,14 +54,15 @@ class XBeeAddress(xbdt.XBeeDataType):
         for i in range(0, self._mLength):
             rByte = rBytes[self._mOffset + i]
             rawBytes.append(rByte)
+            outRawBytes.append(hex(rByte))
             if(i > 0 and ((i + 1) % 2 == 0)):
                 value = (rawBytes[i - 1] << 8) | rawBytes[i]
                 octets.append(value)
 
         decodedValue["address"] = self.formatAddress(octets)
-        decodedValue["raw"] = rawBytes
+        decodedValue["raw"] = outRawBytes
 
-        return decodedValue
+        return parentDecode
 
     def formatAddress(self, octets):
         tempStr = ""

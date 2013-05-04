@@ -68,7 +68,8 @@ class XBeeBitField(xbdt.XBeeDataType):
         return True
 
     def decode(self, rbytes):
-        decodedValue = super(XBeeBitField, self).decode(rbytes)
+        parentDecode = super(XBeeBitField, self).decode(rbytes)
+        decodedValue = parentDecode[self._mName]
 
         # grab the bit mask
         bitMask = 0
@@ -141,8 +142,10 @@ class XBeeBitField(xbdt.XBeeDataType):
                     values[self._mSampleNames[i]] = samples[nextSample]
                     nextSample += 1
 
-        decodedValue["values"] = values
+        for i in range(len(sampleData)):
+            sampleData[i] = hex(sampleData[i])
 
+        decodedValue["values"] = values
         decodedValue["raw samples"] = sampleData
 
-        return decodedValue
+        return parentDecode

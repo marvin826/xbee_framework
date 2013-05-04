@@ -49,13 +49,14 @@ class XBeeInt(xbdt.XBeeDataType):
             self._mEnumeration = objs["enumeration"]
 
     def decode(self, rBytes):
-        decodedValue = super(XBeeInt, self).decode(rBytes)
+        parentDecode = super(XBeeInt, self).decode(rBytes)
+        decodedValue = parentDecode[self._mName]
 
         value = 0
         rawBytes = []
         for i in range(0, self._mLength):
             rByte = rBytes[self._mOffset + i]
-            rawBytes.append(rByte)
+            rawBytes.append(hex(rByte))
             value = (value << 8) | rByte
 
         decodedValue["int"] = value
@@ -72,4 +73,4 @@ class XBeeInt(xbdt.XBeeDataType):
                 self._mLogger.critical(logStr)
                 raise Exception(logStr)
 
-        return decodedValue
+        return parentDecode

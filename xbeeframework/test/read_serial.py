@@ -7,8 +7,8 @@ import traceback
 import logging
 
 
-def packetCallback(jsonStr):
-    print "New packet recieved: " + jsonStr
+def packetCallback(packet):
+    print "New packet recieved: " + str(packet)
 
 
 conn = xbc.XBeeConnection()

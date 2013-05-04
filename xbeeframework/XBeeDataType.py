@@ -1,6 +1,7 @@
 
 
 class XBeeDataType(object):
+
     """docstring for XBeeDataType"""
     def __init__(self):
         self._mName = "None"
@@ -29,4 +30,4 @@ class XBeeDataType(object):
             raise Exception(excStr)
 
     def decode(self, rBytes):
-        return {"name": self._mName, "type": self._mType}
+        return {self._mName: {"type": self._mType}}

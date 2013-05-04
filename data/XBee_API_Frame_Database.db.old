@@ -5,6 +5,24 @@
         "formats" :
             [ 
                 {
+                    "type"   : "XBeeInt",
+                    "name"   : "Start Delimiter",
+                    "offset" : 0,
+                    "length" : 1
+                },
+                {
+                    "type"   : "XBeeInt",
+                    "name"   : "Frame Data Length",
+                    "offset" : 1,
+                    "length" : 2
+                },
+                {
+                    "type"   : "XBeeInt",
+                    "name"   : "Frame Type",
+                    "offset" : 3,
+                    "length" : 1
+                }, 
+                {
                     "type"   : "XBeeAddress",
                     "name"   : "64-bit Source Address",
                     "offset" : 4,

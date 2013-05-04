@@ -52,12 +52,13 @@ class XBeeReader():
                 if(currentPacket.getIsValidPacket() is True):
                     if(self._mPacketHandler):
                         try:
-                            jsonStr = \
+                            processedPacket = \
                                 self._mPacketHandler.handle(currentPacket)
                             if(self._mPacketCallback is not None):
-                                self._mPacketCallback(jsonStr)
+                                self._mPacketCallback(processedPacket)
                         except Exception, e:
-                            logStr = "XBeeReader: ERROR: Error handling packet"
+                            logStr = "XBeeReader: Error handling packet " \
+                                     + str(e)
                             self._mLogger.critical(logStr)
                             raise Exception(logStr)
 

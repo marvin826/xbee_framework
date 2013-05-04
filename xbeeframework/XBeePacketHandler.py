@@ -1,14 +1,16 @@
 import XBeePacket as xbp
 import XBeeFrameDatabase as xbfdb
-import json
+import time
 
 
 class XBeePacketHandler():
+
     """Processes XBeePackets from an XBeeReader"""
     def __init__(self):
 
         self._mFrameDB = False
         self._mLogger = None
+        self._mTimeFmtStr = "%Y-%m-%dT%H:%M:%S"
 
     def setDatabase(self, frameDatabase):
         self._mFrameDB = frameDatabase
@@ -29,19 +31,20 @@ class XBeePacketHandler():
         for desc in descriptors:
             if(desc.getFrameType() == packet.getFrameType()):
                 dataTypes = desc.getXBeeDataTypes()
-                decodedPacket = []
+                decodedPacket = {}
                 for dataType in dataTypes:
                     try:
                         decode = dataType.decode(packet.getProcessedBytes())
-                        decodedPacket.append(decode)
+                        decodedPacket.update(decode)
                     except Exception, e:
                         logStr = "XBeePacketHandler: " \
-                            + "ERROR: Error decoding packet"
+                            + "ERROR: Error decoding packet" + str(e)
                         self.logMessage(logStr, "critical")
                         raise Exception(logStr)
-                jsonStr = json.dumps(decodedPacket)
-                self.logMessage(jsonStr, "debug")
-                return jsonStr
+
+                return {"TimeStamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                        "FrameType": hex(packet.getFrameType()),
+                        "Components": decodedPacket}
 
     def logMessage(self, message, level="info"):
         if(self._mLogger is not None):
