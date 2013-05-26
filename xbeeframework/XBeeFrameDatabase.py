@@ -3,6 +3,7 @@ import XBeeFrameDescriptor as xbfd
 
 
 class XBeeFrameDatabase(object):
+
     """docstring for XBeeFrameDatabase"""
     def __init__(self):
         super(XBeeFrameDatabase, self).__init__()
@@ -16,7 +17,7 @@ class XBeeFrameDatabase(object):
         return tempStr
 
     def setLogger(self, logger):
-        self._mLogger
+        self._mLogger = logger
 
     def getDescriptors(self):
         return self._mDescriptors
@@ -37,6 +38,12 @@ class XBeeFrameDatabase(object):
     def getReaderClass(self, classname):
         # NOTE: our convention is that the module name
         # and the class name are the same
-        mod = __import__(classname)
-        class_ = getattr(mod, classname)
-        return class_()
+        try:
+            mod = __import__(classname)
+            class_ = getattr(mod, classname)
+            return class_()
+
+        except Exception, e:
+            logMessage = "XBeeFrameDatabase.getReaderClass ERROR:" + \
+                str(e)
+            self._mLogger.critical(logMessage)

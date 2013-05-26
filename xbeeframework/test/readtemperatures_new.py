@@ -6,6 +6,7 @@ import XBeeFrameDatabase as xbfdb
 import time
 import twitter
 import logging
+import traceback
 
 CONSUMER_KEY = "bx0cYPrSAjH7nx67nkws5Q"
 CONSUMER_SECRET = "oiZaiSAcoY2VPSw2tCwL9Jm89I63dF6tDUtgT5SZSA"
@@ -150,6 +151,7 @@ def read_temperatures():
 
         # initialize the frame database
         frameDB = xbfdb.XBeeFrameDatabase()
+        frameDB.setLogger(message_log)
         frameDB.read(tc.configuration["dbFilename"])
 
         # create our reader
@@ -171,7 +173,8 @@ def read_temperatures():
         reader.read(True)
 
     except Exception, e:
-        logString = "ERROR: " + str(e)
+        logString = "readtemperatures_new ERROR: " + str(e)
+        traceback.print_exc()
         message_log.critical(logString)
     else:
         pass

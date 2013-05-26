@@ -51,6 +51,13 @@ class XBeeFrameDescriptor(object):
     def getDataTypeClass(self, classname):
         # NOTE: our convention is that the module name
         # and the class name are the same
-        mod = __import__(classname)
-        class_ = getattr(mod, classname)
-        return class_()
+        try:
+            mod = __import__(classname)
+            class_ = getattr(mod, classname)
+            return class_()
+
+        except Exception, e:
+            logMessage = "XBeeFrameDatabase.getReaderClass ERROR: " + \
+                str(e)
+            self._mLogger.critical(logMessage)
+            raise e
