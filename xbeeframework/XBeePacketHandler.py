@@ -33,12 +33,14 @@ class XBeePacketHandler():
                 dataTypes = desc.getXBeeDataTypes()
                 decodedPacket = {}
                 for dataType in dataTypes:
+                    self.logMessage("Decoding: " + str(dataType), "debug")
                     try:
-                        decode = dataType.decode(packet.getProcessedBytes())
+                        decode = dataType.decode(packet.getProcessedBytes(),
+                                                 decodedPacket)
                         decodedPacket.update(decode)
                     except Exception, e:
                         logStr = "XBeePacketHandler: " \
-                            + "ERROR: Error decoding packet" + str(e)
+                            + "ERROR: Error decoding packet : " + str(e)
                         self.logMessage(logStr, "critical")
                         raise Exception(logStr)
 

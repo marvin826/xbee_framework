@@ -12,6 +12,8 @@ CONSUMER_SECRET = "oiZaiSAcoY2VPSw2tCwL9Jm89I63dF6tDUtgT5SZSA"
 ACCESS_TOKEN = "558113021-HFyFIeMXJb3T2jK6S8U8ZSNkf66YBIrwBASp95I3"
 ACCESS_TOKEN_SECRET = "rk9lE9lZgTFfuYW6d8M3Xtaj9SKbnd38PBrZGEXDpYE"
 
+environment = {'last_light_reading': -1, 'last_tweet_time': 0}
+
 
 def createMessageLog():
 
@@ -22,7 +24,7 @@ def createMessageLog():
     m_streamHandler = logging.StreamHandler()
     message_log.addHandler(m_log_file)
     message_log.addHandler(m_streamHandler)
-    message_log.setLevel(logging.DEBUG)
+    message_log.setLevel(logging.INFO)
 
     return message_log
 
@@ -39,22 +41,26 @@ def createTemperatureLog():
 message_log = createMessageLog()
 temperature_log = createTemperatureLog()
 
-last_tweet_time = 0
-last_light_reading = -1
 
+def packetCallback(packet, env={}):
 
-def packetCallback(packet):
+    message_log.debug("packetCallback: " + str(packet))
+    message_log.debug("env: " + str(env))
 
     # check the frame type and make sure it's what we want
     frameType = packet["FrameType"]
-    message_log.debug(packet)
+    address = packet['Components']['64-bit Source Address']['address']
 
-    if(frameType == '0x92'):
+    if(frameType == '0x92' and address == '0013 a200 408b 4347'):
 
+        message_log.debug("received frame type: " + frameType)
         updateTime = time.localtime()
 
         comps = packet["Components"]
-        packetTime = packet["TimeStamp"]
+        packetTimeStamp = packet["TimeStamp"]
+        packetTime = packetTimeStamp.split("T")[1]
+        packetDate = packetTimeStamp.split("T")[0]
+
         analog_values = comps["Analog Samples"]["values"]
 
         lightReading = analog_values["AD1"]
@@ -73,30 +79,50 @@ def packetCallback(packet):
         supplyVoltage = supplyVoltage / 1000.0
         message_log.debug("supply voltage (V): " + str(supplyVoltage))
 
-        tempLogMessage = "{0},{1},{2},{3}"
-        tempLogMessage.format(packetTime,
-                              tempReading,
-                              supplyVoltage,
-                              lightReading)
+        tempLogMessage = "{0},{1},{2},{3},{4}"
+        tempLogMessage = tempLogMessage.format(packetTime,
+                                               packetDate,
+                                               tempReading,
+                                               supplyVoltage,
+                                               lightReading)
         temperature_log.info(tempLogMessage)
+
+        last_tweet_time = 0
+        if 'last_tweet_time' in env:
+            last_tweet_time = env['last_tweet_time']
+
+        last_light_reading = 0
+        if 'last_light_reading' in env:
+            last_light_reading = env['last_light_reading']
+
+        api = None
+        if 'api' in env:
+            api = env['api']
 
         curr_epoch_time = time.mktime(updateTime)
         if(curr_epoch_time - last_tweet_time > 1800):
-            last_tweet_time = curr_epoch_time
-            tweet = "Current temp from Aurora: {0} degrees ({1})"
-            tweet.format(tempReading, supplyVoltage)
-            api.PostUpdate(tweet)
+            env['last_tweet_time'] = curr_epoch_time
+            tweet = "Current temp from Aurora: {0:03.2f} degrees " + \
+                    "({1:03.2f}) {2}"
+            tweet = tweet.format(tempReading, supplyVoltage, packetTime)
+            message_log.debug(tweet)
+            if(api is not None):
+                api.PostUpdate(tweet)
 
         # tweet sunrise/sunset
-        if(light > 0 and last_light_reading == 0):  # sunrise
+        if(lightReading > 0 and last_light_reading == 0):  # sunrise
             tweet = "Good morning! Sunrise at {0}"
-            tweet.format(packetTime)
-            api.PostUpdate(tweet)
-        if(light == 0 and last_light_reading > 0):  # sunset
+            tweet = tweet.format(packetTime)
+            message_log.debug(tweet)
+            if(api is not None):
+                api.PostUpdate(tweet)
+        if(lightReading == 0 and last_light_reading > 0):  # sunset
             tweet = "Good night! Sunset at {0}"
-            tweet.format(packetTime)
-            api.PostUpdate(tweet)
-        last_light_reading = lightReading
+            tweet = tweet.format(packetTime)
+            message_log.debug(tweet)
+            if(api is not None):
+                api.PostUpdate(tweet)
+        env['last_light_reading'] = lightReading
 
 
 def read_temperatures():
@@ -109,6 +135,7 @@ def read_temperatures():
                           consumer_secret=CONSUMER_SECRET,
                           access_token_key=ACCESS_TOKEN,
                           access_token_secret=ACCESS_TOKEN_SECRET)
+        environment['api'] = api
     except twitter.TwitterError as te:
         message_log.critical("Error initializing Twitter API")
         message_log.critical(te)
@@ -140,7 +167,7 @@ def read_temperatures():
 
         reader.setConnection(conn)
         reader.setHandler(handler)
-        reader.setPacketCallback(packetCallback)
+        reader.setPacketCallback(packetCallback, environment)
         reader.read(True)
 
     except Exception, e:

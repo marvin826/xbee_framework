@@ -2,6 +2,7 @@ import XBeePacket as xbp
 
 
 class XBeeReader():
+
     """Reads from an XBee radio through the computer's \
        serial connection."""
     def __init__(self):
@@ -9,6 +10,7 @@ class XBeeReader():
         self._mPacketHandler = None
         self._mLogger = None
         self._mPacketCallback = None
+        self._mCallbackEnv = None
 
     def setHandler(self, handler):
         self._mPacketHandler = handler
@@ -16,8 +18,9 @@ class XBeeReader():
     def setConnection(self, connection):
         self._mXBeeConnection = connection
 
-    def setPacketCallback(self, callback):
+    def setPacketCallback(self, callback, env={}):
         self._mPacketCallback = callback
+        self._mCallbackEnv = env
 
     def setLogger(self, logger):
         self._mLogger = logger
@@ -55,7 +58,11 @@ class XBeeReader():
                             processedPacket = \
                                 self._mPacketHandler.handle(currentPacket)
                             if(self._mPacketCallback is not None):
-                                self._mPacketCallback(processedPacket)
+                                if(self._mCallbackEnv is not None):
+                                    self._mPacketCallback(processedPacket,
+                                                          self._mCallbackEnv)
+                                else:
+                                    self._mPacketCallback(processedPacket)
                         except Exception, e:
                             logStr = "XBeeReader: Error handling packet " \
                                      + str(e)

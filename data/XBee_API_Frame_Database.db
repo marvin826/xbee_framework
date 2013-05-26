@@ -51,10 +51,12 @@
                     "mask order" : "reverse",
                     "field type" : "variable",
                     "field offset" : 19,
+                    "field length" : 2,
                     "sample size" : 16,
                     "sample names" :
                         [ "AD0", "AD1", "AD2", "AD3",
-                          "None", "None", "None", "Supply Voltage" ] 
+                          "None", "None", "None", "Supply Voltage" ],
+                    "field offset eq" : "self._mFieldOffset + len(packet['Digital Samples']['raw samples'])"
                 }
             ]
     }

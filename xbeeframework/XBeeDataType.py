@@ -29,5 +29,5 @@ class XBeeDataType(object):
             excStr = "XBeeDataType: ERROR: No 'name' field found during read()"
             raise Exception(excStr)
 
-    def decode(self, rBytes):
+    def decode(self, rBytes, packet):
         return {self._mName: {"type": self._mType}}

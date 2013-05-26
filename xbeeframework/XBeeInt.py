@@ -48,8 +48,8 @@ class XBeeInt(xbdt.XBeeDataType):
         if "enumeration" in objs:
             self._mEnumeration = objs["enumeration"]
 
-    def decode(self, rBytes):
-        parentDecode = super(XBeeInt, self).decode(rBytes)
+    def decode(self, rBytes, packet):
+        parentDecode = super(XBeeInt, self).decode(rBytes, packet)
         decodedValue = parentDecode[self._mName]
 
         value = 0

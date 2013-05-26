@@ -14,6 +14,7 @@ class XBeeBitField(xbdt.XBeeDataType):
         self._mFieldLength = -1
         self._mSampleSize = -1
         self._mSampleNames = []
+        self._mFieldOffsetEq = ""
 
     def __str__(self):
         tempStr = super(XBeeBitField, self).__str__()
@@ -35,6 +36,8 @@ class XBeeBitField(xbdt.XBeeDataType):
             if(i < len(self._mSampleNames)):
                 tempStr += ", "
         tempStr += " ]\n"
+
+        tempStr += "\t\tfield offset eq : \"" + self._mFieldOffsetEq + "\"\n"
 
         return tempStr
 
@@ -65,11 +68,20 @@ class XBeeBitField(xbdt.XBeeDataType):
         if "sample names" in objs:
             self._mSampleNames = objs["sample names"]
 
+        if "field offset eq" in objs:
+            self._mFieldOffsetEq = objs["field offset eq"]
+
         return True
 
-    def decode(self, rbytes):
-        parentDecode = super(XBeeBitField, self).decode(rbytes)
+    def decode(self, rbytes, packet):
+        parentDecode = super(XBeeBitField, self).decode(rbytes, packet)
         decodedValue = parentDecode[self._mName]
+
+        fieldOffset = self._mFieldOffset
+
+        # execute any pre-decode equations
+        if(len(self._mFieldOffsetEq) > 0):
+            fieldOffset = eval(self._mFieldOffsetEq)
 
         # grab the bit mask
         bitMask = 0
@@ -84,8 +96,8 @@ class XBeeBitField(xbdt.XBeeDataType):
 
         # see if we have any samples
         if bitMask == 0:
-            decodedValue["samples"] = {}
-            return decodedValue
+            decodedValue["raw samples"] = {}
+            return parentDecode
 
         # grab the sample data. if the field type
         # is fixed, we just use the field length
@@ -105,7 +117,7 @@ class XBeeBitField(xbdt.XBeeDataType):
 
         # now grab the bytes that represent the sample data
         # we concatonate these together
-        sampleData = rbytes[self._mFieldOffset:self._mFieldOffset +
+        sampleData = rbytes[fieldOffset:fieldOffset +
                             fieldLength]
         rawSampleData = 0
         for i in range(len(sampleData)):

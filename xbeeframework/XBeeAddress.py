@@ -34,8 +34,8 @@ class XBeeAddress(xbdt.XBeeDataType):
             self._mLogger.critical(logStr)
             raise Exception(logStr)
 
-    def decode(self, rBytes):
-        parentDecode = super(XBeeAddress, self).decode(rBytes)
+    def decode(self, rBytes, packet):
+        parentDecode = super(XBeeAddress, self).decode(rBytes, packet)
         decodedValue = parentDecode[self._mName]
 
         value = 0
