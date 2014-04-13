@@ -1,8 +1,8 @@
 import test_configuration as tc
-import XBeeReader as xbr
-import XBeeConnection as xbc
-import XBeePacketHandler as xbph
-import XBeeFrameDatabase as xbfdb
+from xbeeframework import XBeeReader as xbr
+from xbeeframework import XBeeConnection as xbc
+from xbeeframework import XBeePacketHandler as xbph
+from xbeeframework import XBeeFrameDatabase as xbfdb
 import time
 import twitter
 import logging
@@ -20,7 +20,7 @@ def createMessageLog():
 
     message_log = logging.getLogger("messages")
     m_formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    m_log_file = logging.FileHandler('app_messages.log')
+    m_log_file = logging.FileHandler(tc.configuration['logFile'])
     m_log_file.setFormatter(m_formatter)
     m_streamHandler = logging.StreamHandler()
     message_log.addHandler(m_log_file)
@@ -33,14 +33,24 @@ def createMessageLog():
 def createTemperatureLog():
 
     temperature_log = logging.getLogger("temperatures")
-    t_log_file = logging.FileHandler("temperatures.csv")
+    t_log_file = logging.FileHandler(tc.configuration['temperatureLog'])
     temperature_log.addHandler(t_log_file)
     temperature_log.setLevel(logging.INFO)
 
     return temperature_log
 
+def createGarageLog():
+
+    garage_log = logging.getLogger("garage")
+    g_log_file = logging.FileHandler(tc.configuration['garageLog'])
+    garage_log.addHandler(g_log_file)
+    garage_log.setLevel(logging.INFO)
+
+    return garage_log
+
 message_log = createMessageLog()
 temperature_log = createTemperatureLog()
+garage_log = createGarageLog()
 
 
 def packetCallback(packet, env={}):
@@ -52,78 +62,126 @@ def packetCallback(packet, env={}):
     frameType = packet["FrameType"]
     address = packet['Components']['64-bit Source Address']['address']
 
-    if(frameType == '0x92' and address == '0013 a200 408b 4347'):
+    message_log.debug("received frame type: " + frameType)
+    message_log.debug("from address: " + address)
+    if(frameType == '0x92' and address == '0013 a200 4086 a3da'):
+        handleTemperatureReading(packet, env)
+    elif(frameType == '0x92' and address == '0013 a200 4086 9617'):
+        handleGarageReading(packet, env)
 
-        message_log.debug("received frame type: " + frameType)
-        updateTime = time.localtime()
+def handleGarageReading(packet, env):
 
-        comps = packet["Components"]
-        packetTimeStamp = packet["TimeStamp"]
-        packetTime = packetTimeStamp.split("T")[1]
-        packetDate = packetTimeStamp.split("T")[0]
+    updateTime = time.localtime()
 
-        analog_values = comps["Analog Samples"]["values"]
+    comps = packet["Components"]
+    packetTimeStamp = packet["TimeStamp"]
+    packetTime = packetTimeStamp.split("T")[1]
+    packetDate = packetTimeStamp.split("T")[0]
 
-        lightReading = analog_values["AD1"]
-        message_log.debug("light raw: " + str(lightReading))
-        rTempReading = analog_values["AD0"]
-        message_log.debug("temp raw: " + str(rTempReading))
-        rVoltage = analog_values["Supply Voltage"]
-        message_log.debug("supply raw: " + str(rVoltage))
+    analog_values = comps["Analog Samples"]["values"]
+    rVoltage = analog_values["Supply Voltage"]
+    message_log.debug("supply raw: " + str(rVoltage))
+    rTempReading = analog_values["AD2"]
+    message_log.debug("temp raw: " + str(rTempReading))
 
-        tempReading = (rTempReading * 1200.0) / 1023.0
-        tempReading = (tempReading - 500.0) / 10.0
-        tempReading = ((tempReading * 9.0) / 5.0) + 32.0
-        message_log.debug("temperature (F): " + str(tempReading))
+    tempReading = (rTempReading * 1200.0) / 1023.0
+    tempReading = (tempReading - 500.0) / 10.0
+    tempReading = ((tempReading * 9.0) / 5.0) + 32.0
+    message_log.debug("temperature (F): " + str(tempReading))
 
-        supplyVoltage = (rVoltage * 1200.0) / 1023.0
-        supplyVoltage = supplyVoltage / 1000.0
-        message_log.debug("supply voltage (V): " + str(supplyVoltage))
+    supplyVoltage = (rVoltage * 1200.0) / 1023.0
+    supplyVoltage = supplyVoltage / 1000.0
+    message_log.debug("supply voltage (V): " + str(supplyVoltage))
 
-        tempLogMessage = "{0},{1},{2},{3},{4}"
-        tempLogMessage = tempLogMessage.format(packetTime,
+    digital_values = comps["Digital Samples"]["values"]
+    doorA = "Open"
+    if(digital_values["AD1/DI O1"]):
+        doorA = "Closed"
+    doorB = "Open"
+    if(digital_values["AD0/DI O0"] ):
+        doorB = "Closed"
+
+    garageLogMessage = "{0},{1},{2},{3},{4},{5}"
+    garageLogMessage = garageLogMessage.format(packetTime,
                                                packetDate,
                                                tempReading,
-                                               supplyVoltage,
-                                               lightReading)
-        temperature_log.info(tempLogMessage)
+                                               doorA,
+                                               doorB,
+                                               supplyVoltage)
+    garage_log.info(garageLogMessage)
 
-        last_tweet_time = 0
-        if 'last_tweet_time' in env:
-            last_tweet_time = env['last_tweet_time']
 
-        last_light_reading = 0
-        if 'last_light_reading' in env:
-            last_light_reading = env['last_light_reading']
+def handleTemperatureReading(packet, env):
 
-        api = None
-        if 'api' in env:
-            api = env['api']
+    updateTime = time.localtime()
 
-        curr_epoch_time = time.mktime(updateTime)
-        if(curr_epoch_time - last_tweet_time > 1800):
-            env['last_tweet_time'] = curr_epoch_time
-            tweet = "Current temp from Aurora: {0:03.2f} degrees " + \
-                    "({1:03.2f}) {2}"
-            tweet = tweet.format(tempReading, supplyVoltage, packetTime)
-            message_log.debug(tweet)
-            if(api is not None):
-                api.PostUpdate(tweet)
+    comps = packet["Components"]
+    packetTimeStamp = packet["TimeStamp"]
+    packetTime = packetTimeStamp.split("T")[1]
+    packetDate = packetTimeStamp.split("T")[0]
 
-        # tweet sunrise/sunset
-        if(lightReading > 0 and last_light_reading == 0):  # sunrise
-            tweet = "Good morning! Sunrise at {0}"
-            tweet = tweet.format(packetTime)
-            message_log.debug(tweet)
-            if(api is not None):
-                api.PostUpdate(tweet)
-        if(lightReading == 0 and last_light_reading > 0):  # sunset
-            tweet = "Good night! Sunset at {0}"
-            tweet = tweet.format(packetTime)
-            message_log.debug(tweet)
-            if(api is not None):
-                api.PostUpdate(tweet)
-        env['last_light_reading'] = lightReading
+    analog_values = comps["Analog Samples"]["values"]
+
+    lightReading = analog_values["AD1"]
+    message_log.debug("light raw: " + str(lightReading))
+    rTempReading = analog_values["AD0"]
+    message_log.debug("temp raw: " + str(rTempReading))
+    rVoltage = analog_values["Supply Voltage"]
+    message_log.debug("supply raw: " + str(rVoltage))
+
+    tempReading = (rTempReading * 1200.0) / 1023.0
+    tempReading = (tempReading - 500.0) / 10.0
+    tempReading = ((tempReading * 9.0) / 5.0) + 32.0
+    message_log.debug("temperature (F): " + str(tempReading))
+
+    supplyVoltage = (rVoltage * 1200.0) / 1023.0
+    supplyVoltage = supplyVoltage / 1000.0
+    message_log.debug("supply voltage (V): " + str(supplyVoltage))
+
+    tempLogMessage = "{0},{1},{2},{3},{4}"
+    tempLogMessage = tempLogMessage.format(packetTime,
+                                           packetDate,
+                                           tempReading,
+                                           supplyVoltage,
+                                           lightReading)
+    temperature_log.info(tempLogMessage)
+
+    last_tweet_time = 0
+    if 'last_tweet_time' in env:
+        last_tweet_time = env['last_tweet_time']
+
+    last_light_reading = 0
+    if 'last_light_reading' in env:
+        last_light_reading = env['last_light_reading']
+
+    api = None
+    if 'api' in env:
+        api = env['api']
+
+    curr_epoch_time = time.mktime(updateTime)
+    if(curr_epoch_time - last_tweet_time > 1800):
+        env['last_tweet_time'] = curr_epoch_time
+        tweet = "Current temp from Aurora: {0:03.2f} degrees " + \
+                "({1:03.2f}) {2}"
+        tweet = tweet.format(tempReading, supplyVoltage, packetTime)
+        message_log.debug(tweet)
+        if(api is not None):
+            api.PostUpdate(tweet)
+
+    # tweet sunrise/sunset
+    if(lightReading > 0 and last_light_reading == 0):  # sunrise
+        tweet = "Good morning! Sunrise at {0}"
+        tweet = tweet.format(packetTime)
+        message_log.debug(tweet)
+        if(api is not None):
+            api.PostUpdate(tweet)
+    if(lightReading == 0 and last_light_reading > 0):  # sunset
+        tweet = "Good night! Sunset at {0}"
+        tweet = tweet.format(packetTime)
+        message_log.debug(tweet)
+        if(api is not None):
+            api.PostUpdate(tweet)
+    env['last_light_reading'] = lightReading
 
 
 def read_temperatures():

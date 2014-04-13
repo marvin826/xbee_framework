@@ -1,13 +1,14 @@
 import test_configuration as tc
-import XBeeReader as xbr
-import XBeeConnection as xbc
-import XBeePacketHandler as xbph
-import XBeeFrameDatabase as xbfdb
+#from xbeeframework import XBeeReader as xbr
+import xbeeframework.XBeeReader as xbr
+from xbeeframework import XBeeConnection as xbc
+from xbeeframework import XBeePacketHandler as xbph
+from xbeeframework import XBeeFrameDatabase as xbfdb
 import traceback
 import logging
 
 
-def packetCallback(packet):
+def packetCallback(packet, env = {}):
     print "New packet recieved: " + str(packet)
 
 
@@ -21,7 +22,7 @@ m_log_file.setFormatter(m_formatter)
 m_streamHandler = logging.StreamHandler()
 framework_log.addHandler(m_log_file)
 framework_log.addHandler(m_streamHandler)
-framework_log.setLevel(logging.INFO)
+framework_log.setLevel(logging.DEBUG)
 
 framework_log.info("XBeeFramework Start")
 
@@ -32,10 +33,13 @@ try:
     framework_log.info(logString)
 
     # initialize the frame database
+    print "Initializing frame database..."
     frameDB = xbfdb.XBeeFrameDatabase()
+    frameDB.setLogger(framework_log)
     frameDB.read(tc.configuration["dbFilename"])
 
     # create our reader
+    print "Initializing reader..."
     reader = xbr.XBeeReader()
     reader.setLogger(framework_log)
 

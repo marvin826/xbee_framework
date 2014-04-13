@@ -1,4 +1,4 @@
-
+import load_module as lm
 
 class XBeeFrameDescriptor(object):
     """XBeeFrameDescriptor represents a frame described in the XBeeFramework
@@ -39,7 +39,7 @@ class XBeeFrameDescriptor(object):
         for format in formats:
             if("type" in format):
                 typeStr = format["type"]
-                dataType = self.getDataTypeClass(typeStr)
+                dataType = lm.load_module(typeStr, self._mLogger)()
                 dataType.setLogger(self._mLogger)
                 dataType.read(format)
                 self._mXBeeDataTypes.append(dataType)
@@ -47,17 +47,3 @@ class XBeeFrameDescriptor(object):
                 if(self._mLogger is not None):
                     logMessage = "ERROR: no \"type\" specified for format\n"
                     self._mLogger.critical(logMessage)
-
-    def getDataTypeClass(self, classname):
-        # NOTE: our convention is that the module name
-        # and the class name are the same
-        try:
-            mod = __import__(classname)
-            class_ = getattr(mod, classname)
-            return class_()
-
-        except Exception, e:
-            logMessage = "XBeeFrameDatabase.getReaderClass ERROR: " + \
-                str(e)
-            self._mLogger.critical(logMessage)
-            raise e

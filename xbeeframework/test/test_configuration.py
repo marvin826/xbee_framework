@@ -1,12 +1,12 @@
 import sys
 
-project_root = "j:\\Users\\Todd\\Projects\\ZigBee\\XBeeFramework"
+project_root = "/home/kaiserw/application"
 sys.path.append(project_root)
-sys.path.append(project_root + '\\xbeeframework')
 
 configuration = {
-    "dbFilename": project_root + "\\data\\XBee_API_Frame_Database.db",
-    "commPort": "COM6",
-    "logFile": project_root + "\\XBeeFramework.log"
-
+    "dbFilename": project_root + "/config/XBee_API_Frame_Database.db",
+    "commPort": "/dev/ttyS0",
+    "logFile": project_root + "/logs/XBeeFramework.log",
+    "temperatureLog" : project_root + "/logs/temperatures.csv",
+    "garageLog" : project_root + "/logs/garage_readings.csv"
 }

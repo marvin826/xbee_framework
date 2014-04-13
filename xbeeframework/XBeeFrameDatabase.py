@@ -34,16 +34,3 @@ class XBeeFrameDatabase(object):
             fDesc.setLogger(self._mLogger)
             fDesc.read(frameDesc)
             self._mDescriptors.append(fDesc)
-
-    def getReaderClass(self, classname):
-        # NOTE: our convention is that the module name
-        # and the class name are the same
-        try:
-            mod = __import__(classname)
-            class_ = getattr(mod, classname)
-            return class_()
-
-        except Exception, e:
-            logMessage = "XBeeFrameDatabase.getReaderClass ERROR:" + \
-                str(e)
-            self._mLogger.critical(logMessage)

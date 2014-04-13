@@ -1,6 +1,6 @@
 import test_configuration
 import unittest as ut
-import XBeeInt as xbi
+from xbeeframework import XBeeInt as xbi
 
 
 class XBeeIntTest(ut.TestCase):
