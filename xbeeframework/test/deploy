@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cd ~/code
+rm MANIFEST
+python setup.py sdist
+cp dist/XbeeFramework-0.1.0.tar.gz ~/application/tmp
+cd ~/application/tmp
+tar xzf XbeeFramework-0.1.0.tar.gz
+cd XbeeFramework-0.1.0
+python setup.py install
+
