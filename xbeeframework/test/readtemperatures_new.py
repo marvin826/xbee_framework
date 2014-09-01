@@ -4,6 +4,7 @@ from xbeeframework import XBeeConnection as xbc
 from xbeeframework import XBeePacketHandler as xbph
 from xbeeframework import XBeeFrameDatabase as xbfdb
 import time
+import requests
 import twitter
 import logging
 import traceback
@@ -168,8 +169,8 @@ def handleTemperatureReading(packet, env):
         if(api is not None):
             try:
                 api.PostUpdate(tweet)
-            except HTTPSConnectionPool, h:
-                message_log.info(str(h))
+            except requests.exceptions.ConnectionError as e:
+                message_log.info(str(e))
 
 
     # tweet sunrise/sunset
@@ -180,8 +181,8 @@ def handleTemperatureReading(packet, env):
         if(api is not None):
             try:
                 api.PostUpdate(tweet)
-            except HTTPSConnectionPool, h:
-                message_log.info(str(h))
+            except requests.exceptions.ConnectionError as e:
+                message_log.info(str(e))
     if(lightReading == 0 and last_light_reading > 0):  # sunset
         tweet = "Good night! Sunset at {0}"
         tweet = tweet.format(packetTime)
@@ -189,8 +190,8 @@ def handleTemperatureReading(packet, env):
         if(api is not None):
             try:
                 api.PostUpdate(tweet)
-            except HTTPSConnectionPool, h:
-                message_log.info(str(h))
+            except requests.exceptions.ConnectionError as e:
+                message_log.info(str(e))
     env['last_light_reading'] = lightReading
 
 
