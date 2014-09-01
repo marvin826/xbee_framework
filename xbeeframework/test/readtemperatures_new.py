@@ -166,7 +166,11 @@ def handleTemperatureReading(packet, env):
         tweet = tweet.format(tempReading, supplyVoltage, packetTime)
         message_log.debug(tweet)
         if(api is not None):
-            api.PostUpdate(tweet)
+            try:
+                api.PostUpdate(tweet)
+            except HTTPSConnectionPool, h:
+                message_log.info(str(h))
+
 
     # tweet sunrise/sunset
     if(lightReading > 0 and last_light_reading == 0):  # sunrise
@@ -174,13 +178,19 @@ def handleTemperatureReading(packet, env):
         tweet = tweet.format(packetTime)
         message_log.debug(tweet)
         if(api is not None):
-            api.PostUpdate(tweet)
+            try:
+                api.PostUpdate(tweet)
+            except HTTPSConnectionPool, h:
+                message_log.info(str(h))
     if(lightReading == 0 and last_light_reading > 0):  # sunset
         tweet = "Good night! Sunset at {0}"
         tweet = tweet.format(packetTime)
         message_log.debug(tweet)
         if(api is not None):
-            api.PostUpdate(tweet)
+            try:
+                api.PostUpdate(tweet)
+            except HTTPSConnectionPool, h:
+                message_log.info(str(h))
     env['last_light_reading'] = lightReading
 
 
