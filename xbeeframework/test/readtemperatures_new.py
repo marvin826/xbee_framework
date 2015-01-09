@@ -9,10 +9,6 @@ import twitter
 import logging
 import traceback
 
-CONSUMER_KEY = "bx0cYPrSAjH7nx67nkws5Q"
-CONSUMER_SECRET = "oiZaiSAcoY2VPSw2tCwL9Jm89I63dF6tDUtgT5SZSA"
-ACCESS_TOKEN = "558113021-HFyFIeMXJb3T2jK6S8U8ZSNkf66YBIrwBASp95I3"
-ACCESS_TOKEN_SECRET = "rk9lE9lZgTFfuYW6d8M3Xtaj9SKbnd38PBrZGEXDpYE"
 
 environment = {'last_light_reading': -1, 'last_tweet_time': 0}
 
@@ -233,7 +229,7 @@ def read_temperatures():
         handler.setDatabase(frameDB)
 
         logString = "Successfully read database: " \
-            + tc.configuration["dbFilename"]
+                    + tc.configuration["dbFilename"]
         message_log.info(logString)
 
         reader.setConnection(conn)
@@ -246,8 +242,8 @@ def read_temperatures():
         traceback.print_exc()
         message_log.critical(logString)
     else:
-        pass
+        
     finally:
-        conn.close()
+            
 
 read_temperatures()
